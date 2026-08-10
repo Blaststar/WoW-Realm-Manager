@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -38,15 +39,27 @@ class AppConfig
     [JsonPropertyName("expansions")]
     public Dictionary<string, ExpansionData> Expansions { get; set; } = new();
 
-    public static readonly string[] ExpansionNames = { "WOTLK", "Legion" };
+    public static readonly string[] ExpansionNames = { "Classic", "TBC", "WOTLK", "Cataclysm", "MOP", "WOD", "Legion", "BFA" };
+
+    // Mapping expansion to patch number for easier format identification
+    public static int GetExpansionNumber(string expansion) => expansion switch
+    {
+        "Classic" => 1,
+        "TBC" => 2,
+        "WOTLK" => 3,
+        "Cataclysm" => 4,
+        "MOP" => 5,
+        "WOD" => 6,
+        "Legion" => 7,
+        "BFA" => 8,
+        _ => 3
+    };
 
     // Default .wtf paths per expansion
-    static string DefaultPath(string expansion) => expansion switch
-    {
-        "WOTLK" => @".\Data\enUS\realmlist.wtf",
-        "Legion" => @".\WTF\Config.wtf",
-        _ => @".\realmlist.wtf",
-    };
+    static string DefaultPath(string expansion) =>
+        GetExpansionNumber(expansion) >= 5
+            ? @".\WTF\Config.wtf"
+            : @".\Data\enUS\realmlist.wtf";
 
     // Guarantees both expansions exist with non-null members.
     public void EnsureDefaults()
@@ -68,13 +81,14 @@ class AppConfig
     }
 }
 
-// Realmlist file writer single line surgical edit (for legion)
+// Realmlist file writer single line surgical edit (for patches >= 5)
 
 static class RealmlistWriter
 {
+
     // Formats the one line for the given expansion.
     public static string FormatLine(string expansion, string value) =>
-        expansion == "Legion"
+        AppConfig.GetExpansionNumber(expansion) >= 5
             ? $"SET portal \"{value}\""
             : $"set realmlist {value}";
 
@@ -82,7 +96,7 @@ static class RealmlistWriter
     static bool IsTargetLine(string line, string expansion)
     {
         string t = line.TrimStart();
-        return expansion == "Legion"
+        return AppConfig.GetExpansionNumber(expansion) >= 5
             ? t.StartsWith("set portal", StringComparison.OrdinalIgnoreCase)
             : t.StartsWith("set realmlist", StringComparison.OrdinalIgnoreCase);
     }
@@ -157,6 +171,9 @@ static class RealmlistWriter
 
 class MainForm : Form
 {
+    static readonly string version = "v1.0.1";
+    static readonly string website = "https://blaststar.net";
+
     static readonly string ConfigPath = Path.Combine(AppContext.BaseDirectory, "wrm-config.json");
     static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
@@ -173,7 +190,7 @@ class MainForm : Form
     Button _removeBtn = null!;
     Button _applyBtn = null!;
     Label _status = null!;
-    Label _footer = null!;
+    LinkLabel _footer = null!;
 
     bool _switching; // guards the combo/path events during programmatic changes
 
@@ -189,7 +206,7 @@ class MainForm : Form
 
     void BuildUi()
     {
-        Text = "WoW Realmlist Manager";
+        Text = $"WoW Realmlist Manager {version}";
         Font = new Font("Segoe UI", 9f);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
@@ -307,15 +324,17 @@ class MainForm : Form
             Text = "Ready.",
         };
 
-        _footer = new Label
+        _footer = new LinkLabel
         {
             Location = new Point(margin, _status.Bottom + 8),
             Width = width,
             AutoEllipsis = true,
             ForeColor = Color.Black,
             Text = "Created by: Blaststar",
+            LinkArea = new LinkArea(12, 9),
             TextAlign = ContentAlignment.MiddleCenter,
         };
+        _footer.LinkClicked += OnLinkClick;
 
         Controls.AddRange(new Control[]
         {
@@ -351,8 +370,7 @@ class MainForm : Form
         _pathBox.Text = Current.WtfPath;
         RefreshServerList();
         RefreshCurrentLine();
-        SetStatus($"{expansion} format: {RealmlistWriter.FormatLine(expansion, "IP_DOMAIN")}",
-            Color.DimGray);
+        SetStatus($"{expansion} format: {RealmlistWriter.FormatLine(expansion, "IP_DOMAIN")}", Color.DimGray);
         _switching = false;
     }
 
@@ -375,6 +393,16 @@ class MainForm : Form
     {
         if (_config.Expansions.TryGetValue(_currentExpansion, out var data))
             data.WtfPath = _pathBox.Text.Trim();
+    }
+
+    // Link Handler
+    private void OnLinkClick(object? sender, LinkLabelLinkClickedEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = website,
+            UseShellExecute = true
+        });
     }
 
     // Button handlers
