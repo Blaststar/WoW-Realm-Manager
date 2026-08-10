@@ -34,22 +34,22 @@ class ExpansionData
 class AppConfig
 {
     [JsonPropertyName("selectedExpansion")]
-    public string SelectedExpansion { get; set; } = "WOTLK";
+    public string SelectedExpansion { get; set; } = "WotLK";
 
     [JsonPropertyName("expansions")]
     public Dictionary<string, ExpansionData> Expansions { get; set; } = new();
 
-    public static readonly string[] ExpansionNames = { "Classic", "TBC", "WOTLK", "Cataclysm", "MOP", "WOD", "Legion", "BFA" };
+    public static readonly string[] ExpansionNames = { "Classic", "TBC", "WotLK", "Cataclysm", "MoP", "WoD", "Legion", "BFA" };
 
     // Mapping expansion to patch number for easier format identification
     public static int GetExpansionNumber(string expansion) => expansion switch
     {
         "Classic" => 1,
         "TBC" => 2,
-        "WOTLK" => 3,
+        "WotLK" => 3,
         "Cataclysm" => 4,
-        "MOP" => 5,
-        "WOD" => 6,
+        "MoP" => 5,
+        "WoD" => 6,
         "Legion" => 7,
         "BFA" => 8,
         _ => 3
@@ -77,7 +77,7 @@ class AppConfig
         }
 
         if (!ExpansionNames.Contains(SelectedExpansion))
-            SelectedExpansion = "WOTLK";
+            SelectedExpansion = "WotLK";
     }
 }
 
