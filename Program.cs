@@ -196,6 +196,7 @@ class MainForm : Form
 
     public MainForm()
     {
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         _config = LoadConfig();
         _currentExpansion = _config.SelectedExpansion;
         BuildUi();
