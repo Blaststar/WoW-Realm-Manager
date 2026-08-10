@@ -1,4 +1,4 @@
 ﻿# WoW-Realm-Manager
 Simple tool for managing and switching between world of warcraft WOTLK and Legion private servers.
 
-<img width="434" height="523" alt="image" src="https://github.com/user-attachments/assets/34fe93c2-5afb-48a4-b23b-dfa9c24f80b5" />
+<img width="442" height="532" alt="image" src="https://github.com/user-attachments/assets/50544d58-7b35-4e51-b4f7-f8b25574084f" />
