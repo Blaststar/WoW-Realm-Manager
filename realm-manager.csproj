@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>realm_manager</RootNamespace>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>realmicon.ico</ApplicationIcon>
+    <AssemblyName>WoW Realm Manager</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="realmicon.ico" />
+  </ItemGroup>
+
+</Project>
