@@ -171,7 +171,7 @@ static class RealmlistWriter
 
 class MainForm : Form
 {
-    static readonly string version = "v1.0.1";
+    static readonly string version = "v1.0.2";
     static readonly string website = "https://blaststar.net";
 
     static readonly string ConfigPath = Path.Combine(AppContext.BaseDirectory, "wrm-config.json");
@@ -208,126 +208,136 @@ class MainForm : Form
     {
         Text = $"WoW Realmlist Manager {version}";
         Font = new Font("Segoe UI", 9f);
+
+        // Scale everything by the monitor's DPI, and let the window size itself
+        AutoScaleMode = AutoScaleMode.Dpi;
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(440, 500);
+        AutoSize = true;
+        AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
-        int margin = 12;
-        int width = ClientSize.Width - margin * 2;
+        // Logical content width
+        const int contentWidth = 416;
 
-        var expansionLabel = new Label
+        // Initial button row height
+        const int fieldHeight = 23;
+
+        var root = new TableLayoutPanel
         {
-            Text = "Expansion",
-            Location = new Point(margin, margin),
+            ColumnCount = 1,
             AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            GrowStyle = TableLayoutPanelGrowStyle.AddRows,
+            Dock = DockStyle.Fill,
+            Padding = new Padding(12),
         };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, contentWidth));
+
+        // Expansion
+        var expansionLabel = new Label { Text = "Expansion", AutoSize = true, Margin = new Padding(0, 0, 0, 2) };
         _expansionCombo = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(margin, expansionLabel.Bottom + 2),
-            Width = width,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 10),
         };
         _expansionCombo.Items.AddRange(AppConfig.ExpansionNames);
         _expansionCombo.SelectedItem = _currentExpansion;
         _expansionCombo.SelectedIndexChanged += OnExpansionChanged;
 
-        var pathLabel = new Label
-        {
-            Text = ".wtf file path",
-            Location = new Point(margin, _expansionCombo.Bottom + 10),
-            AutoSize = true,
-        };
-        _pathBox = new TextBox
-        {
-            Location = new Point(margin, pathLabel.Bottom + 2),
-            Width = width,
-        };
+        // .wtf path
+        var pathLabel = new Label { Text = ".wtf file path", AutoSize = true, Margin = new Padding(0, 0, 0, 2) };
+        _pathBox = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 6) };
         _pathBox.Leave += (_, _) => SaveCurrentPathIntoConfig();
 
         _currentLine = new Label
         {
-            Location = new Point(margin, _pathBox.Bottom + 6),
-            Width = width,
+            AutoSize = true,
+            Dock = DockStyle.Fill,
             AutoEllipsis = true,
             ForeColor = Color.DimGray,
+            Margin = new Padding(0, 0, 0, 8),
         };
 
-        var serversLabel = new Label
-        {
-            Text = "Saved servers",
-            Location = new Point(margin, _currentLine.Bottom + 8),
-            AutoSize = true,
-        };
+        // Saved servers
+        var serversLabel = new Label { Text = "Saved servers", AutoSize = true, Margin = new Padding(0, 0, 0, 2) };
         _serverList = new ListBox
         {
-            Location = new Point(margin, serversLabel.Bottom + 2),
-            Width = width,
+            Dock = DockStyle.Fill,
             Height = 150,
+            Margin = new Padding(0, 0, 0, 10),
         };
 
-        // Add area: name + value + Add button
-        var nameLabel = new Label
+        // Add area: Name + IP/Domain + Add button
+        var addRow = new TableLayoutPanel
         {
-            Text = "Name",
-            Location = new Point(margin, _serverList.Bottom + 10),
+            ColumnCount = 3,
+            RowCount = 2,
             AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 12),
         };
-        var valueLabel = new Label
-        {
-            Text = "IP / Domain",
-            Location = new Point(margin + 150, _serverList.Bottom + 10),
-            AutoSize = true,
-        };
-        _nameBox = new TextBox
-        {
-            Location = new Point(margin, nameLabel.Bottom + 2),
-            Width = 140,
-        };
-        _valueBox = new TextBox
-        {
-            Location = new Point(margin + 150, valueLabel.Bottom + 2),
-            Width = 160,
-        };
-        _addBtn = new Button
-        {
-            Text = "Add",
-            Location = new Point(margin + 320, _nameBox.Top - 1),
-            Width = width - 320,
-        };
+        var addFieldRowStyle = new RowStyle(SizeType.Absolute, fieldHeight); // fields + Add
+        addRow.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // labels
+        addRow.RowStyles.Add(addFieldRowStyle);
+        addRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45f));
+        addRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55f));
+        addRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72));
+
+        var nameLabel = new Label { Text = "Name", AutoSize = true, Margin = new Padding(0, 0, 0, 2) };
+        var valueLabel = new Label { Text = "IP / Domain", AutoSize = true, Margin = new Padding(0, 0, 0, 2) };
+        _nameBox = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 6, 0) };
+        _valueBox = new TextBox { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 6, 0) };
+        _addBtn = new Button { Text = "Add", Dock = DockStyle.Fill, Margin = new Padding(0) };
         _addBtn.Click += OnAdd;
 
-        // Action row: Remove + Set Active
-        _removeBtn = new Button
+        addRow.Controls.Add(nameLabel, 0, 0);
+        addRow.Controls.Add(valueLabel, 1, 0);
+        addRow.Controls.Add(_nameBox, 0, 1);
+        addRow.Controls.Add(_valueBox, 1, 1);
+        addRow.Controls.Add(_addBtn, 2, 1);
+
+        // Action row: Remove + Set Active (each half the width)
+        var actionRow = new TableLayoutPanel
         {
-            Text = "Remove Selected",
-            Location = new Point(margin, _nameBox.Bottom + 12),
-            Width = 150,
+            ColumnCount = 2,
+            RowCount = 1,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 12),
         };
+
+        var actionRowStyle = new RowStyle(SizeType.Absolute, fieldHeight);
+        actionRow.RowStyles.Add(actionRowStyle);
+        actionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+        actionRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+
+        _removeBtn = new Button { Text = "Remove Selected", Dock = DockStyle.Fill, Margin = new Padding(0, 0, 6, 0) };
         _removeBtn.Click += OnRemove;
 
-        _applyBtn = new Button
-        {
-            Text = "Set Active",
-            Location = new Point(margin + width - 150, _nameBox.Bottom + 12),
-            Width = 150,
-            Height = _removeBtn.Height,
-        };
+        _applyBtn = new Button { Text = "Set Active", Dock = DockStyle.Fill, Margin = new Padding(6, 0, 0, 0) };
         _applyBtn.Font = new Font(Font, FontStyle.Bold);
         _applyBtn.Click += OnApply;
 
+        actionRow.Controls.Add(_removeBtn, 0, 0);
+        actionRow.Controls.Add(_applyBtn, 1, 0);
+
         _status = new Label
         {
-            Location = new Point(margin, _applyBtn.Bottom + 12),
-            Width = width,
+            AutoSize = true,
+            Dock = DockStyle.Fill,
             AutoEllipsis = true,
             Text = "Ready.",
+            Margin = new Padding(0, 0, 0, 8),
         };
 
         _footer = new LinkLabel
         {
-            Location = new Point(margin, _status.Bottom + 8),
-            Width = width,
+            AutoSize = true,
+            Dock = DockStyle.Fill,
             AutoEllipsis = true,
             ForeColor = Color.Black,
             Text = "Created by: Blaststar",
@@ -336,14 +346,27 @@ class MainForm : Form
         };
         _footer.LinkClicked += OnLinkClick;
 
-        Controls.AddRange(new Control[]
+        root.Controls.Add(expansionLabel);
+        root.Controls.Add(_expansionCombo);
+        root.Controls.Add(pathLabel);
+        root.Controls.Add(_pathBox);
+        root.Controls.Add(_currentLine);
+        root.Controls.Add(serversLabel);
+        root.Controls.Add(_serverList);
+        root.Controls.Add(addRow);
+        root.Controls.Add(actionRow);
+        root.Controls.Add(_status);
+        root.Controls.Add(_footer);
+
+        Controls.Add(root);
+
+        // Match the three buttons to the real input height
+        Load += (_, _) =>
         {
-            expansionLabel, _expansionCombo,
-            pathLabel, _pathBox, _currentLine,
-            serversLabel, _serverList,
-            nameLabel, valueLabel, _nameBox, _valueBox, _addBtn,
-            _removeBtn, _applyBtn, _status, _footer,
-        });
+            int h = _nameBox.Height;
+            addFieldRowStyle.Height = h;
+            actionRowStyle.Height = h;
+        };
 
         FormClosing += (_, _) => { SaveCurrentPathIntoConfig(); SaveConfig(); };
     }
@@ -531,7 +554,7 @@ static class Program
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        Application.SetHighDpiMode(HighDpiMode.SystemAware);
+        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.Run(new MainForm());
     }
 }
